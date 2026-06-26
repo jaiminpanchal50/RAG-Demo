@@ -543,5 +543,3 @@ else:
 - **Vector Database:** [ChromaDB](https://www.trychroma.com/)
 - **PDF Parsing:** [pdfplumber](https://github.com/jsvine/pdfplumber)
 - **Web Scraping:** BeautifulSoup4 + Selenium
-- **Project:** Praangan Elitus, Naroda Ahmedabad
-
