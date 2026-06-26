@@ -1,0 +1,15 @@
+# Install all direct dependencies with:
+pip install chromadb sentence-transformers transformers torch pdfplumber requests feedparser python-docx beautifulsoup4 selenium numpy
+pip install transformers scipy sounddevice
+# Direct Python dependencies for the RAG Demo project
+chromadb
+sentence-transformers
+transformers
+torch
+pdfplumber
+requests
+feedparser
+python-docx
+beautifulsoup4
+selenium
+numpy

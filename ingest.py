@@ -165,6 +165,7 @@ COLLECTION_NAME = "praangan_elitus"
 
 print("🔄 Loading embedding model...")
 model = SentenceTransformer("intfloat/multilingual-e5-base", device="cpu")
+# model = SentenceTransformer("BAAI/bge-m3", device="cpu")
 
 client = chromadb.PersistentClient(path="./chroma_db")
 collection = client.get_or_create_collection(
@@ -309,97 +310,6 @@ def ingest_txt(all_chunks, all_ids, all_metadata, chunk_id):
         except Exception as e:
             print(f"  ⚠️  Error in {filename}: {e}")
     return chunk_id
-
-# ── 5. Websites (URL scraping) ───────────────────────────────
-# def scrape_url(url):
-#     headers = {
-#         "User-Agent": (
-#             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-#             "Chrome/120.0.0.0 Safari/537.36"
-#         ),
-#         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-#         "Accept-Language": "en-US,en;q=0.5",
-#     }
-#     try:
-#         res = requests.get(url, headers=headers, timeout=20)
-#         print(f"      → HTTP {res.status_code} | {len(res.text)} chars raw HTML")
-#         if res.status_code == 200:
-#             soup = BeautifulSoup(res.text, "html.parser")
-#             for tag in soup(["script","style","nav","footer","header","noscript"]):
-#                 tag.decompose()
-#             text = soup.get_text(separator=" ", strip=True)
-#             print(f"      → Extracted {len(text.split())} words after parsing")
-#             if len(text.split()) > 50:
-#                 return text
-#             print(f"      → JS-rendered site detected, trying Selenium...")
-#     except Exception as e:
-#         print(f"      → requests failed: {e}")
-
-#     try:
-#         from selenium import webdriver
-#         from selenium.webdriver.chrome.options import Options
-#         from selenium.webdriver.chrome.service import Service
-#         import time
-
-#         print(f"      → Launching headless Chromium...")
-#         options = Options()
-#         options.add_argument("--headless")
-#         options.add_argument("--no-sandbox")
-#         options.add_argument("--disable-dev-shm-usage")
-#         options.add_argument("--disable-gpu")
-#         options.add_argument("--window-size=1920,1080")
-#         options.add_argument("user-agent=Mozilla/5.0 (X11; Linux x86_64)")
-#         options.binary_location = "/usr/bin/chromium-browser"
-
-#         service = Service("/usr/bin/chromedriver")
-#         driver = webdriver.Chrome(service=service, options=options)
-#         driver.get(url)
-#         time.sleep(5)
-
-#         soup = BeautifulSoup(driver.page_source, "html.parser")
-#         driver.quit()
-
-#         for tag in soup(["script","style","nav","footer","header","noscript"]):
-#             tag.decompose()
-#         text = soup.get_text(separator=" ", strip=True)
-#         print(f"      → Selenium extracted {len(text.split())} words")
-#         return text
-
-#     except ImportError:
-#         print(f"      → Selenium not installed: pip install selenium")
-#         print(f"      → Tip: Copy website text manually to data/txt/website.txt")
-#         return ""
-#     except Exception as e:
-#         print(f"      → Selenium failed: {e}")
-#         print(f"      → Tip: Copy website text manually to data/txt/website.txt")
-#         return ""
-
-# def ingest_urls(all_chunks, all_ids, all_metadata, chunk_id):
-#     if not os.path.exists(URLS_FILE):
-#         print(f"  ⏭️  urls.txt not found at {URLS_FILE}")
-#         return chunk_id
-#     with open(URLS_FILE, "r") as f:
-#         urls = [
-#             line.strip() for line in f
-#             if line.strip() and not line.startswith("#")
-#         ]
-#     if not urls:
-#         print(f"  ⏭️  No URLs in {URLS_FILE}")
-#         return chunk_id
-#     for url in urls:
-#         print(f"  🌐 Scraping: {url}")
-#         text = scrape_url(url)
-#         if text:
-#             before = len(all_chunks)
-#             # Smaller chunks for website content for better diversity
-#             chunk_id = add_chunks(all_chunks, all_ids, all_metadata,
-#                                    chunk_text(text, chunk_size=150, overlap=20),
-#                                    url, "website", chunk_id, min_words=15)
-#             print(f"      → Added {len(all_chunks) - before} chunks")
-#     return chunk_id
-
-
-
 
 # ── 5. Websites (URL scraping) ───────────────────────────────
 def scrape_url(url):
@@ -724,7 +634,12 @@ def main():
 
     prefixed   = [f"passage: {c}" for c in all_chunks]
     embeddings = model.encode(prefixed, batch_size=8, show_progress_bar=True)
-
+    # embeddings = model.encode(
+    #     all_chunks,
+    #     batch_size=8,
+    #     show_progress_bar=True,
+    #     normalize_embeddings=True
+    # )
     collection.add(
         documents=all_chunks,
         embeddings=embeddings.tolist(),
